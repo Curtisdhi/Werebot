@@ -3,7 +3,7 @@ package org.Werebot;
 import java.util.Random;
 /**
  * @author Pickle
- * @version 0.1
+ * @version 0.2
  */
 public class Roles {
     private final Random r = new Random();

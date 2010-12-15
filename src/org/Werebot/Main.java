@@ -1,5 +1,11 @@
 package org.Werebot;
  
+/**
+ * Sets up the bot and connects...
+ * 
+ * @author Pickle
+ * @version 0.2
+ */
 public class Main {
     protected final double VERSION = 0.2;
     protected final String SERVER = "irc.coldfront.net";

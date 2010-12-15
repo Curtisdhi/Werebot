@@ -8,7 +8,7 @@ import java.util.List;
  * Records vote data
  * 
  * @author Pickle
- * @version 0.1
+ * @version 0.2
  */
 public class Votes {
     protected int totalVotes = 0;
@@ -19,9 +19,9 @@ public class Votes {
         player.setVote(vote);
         totalVotes++;
     }
-    /*
-     *Count votes returns a Player object if the votes is vaild
-     * @returns Players
+    /**
+     *Count votes returns a Player object if the votes is valid
+     * @return Players
      */
     protected Players countVotes(List<Players> PList) {
         Players[] pArray = new Players[PList.size()];

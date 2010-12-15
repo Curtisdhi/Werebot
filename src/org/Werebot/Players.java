@@ -5,7 +5,7 @@ package org.Werebot;
  * Player.java - deals with player data
  * 
  * @author Pickle
- * @version 0.1
+ * @version 0.2
  */
 public class Players {
     private Main main;
@@ -29,6 +29,7 @@ public class Players {
     protected void setRole(String role) { this.role=role; } 
     protected void setRoleNumber(int roleNumber) { this.roleNumber=roleNumber; }   
     protected void setVote(Players vote) { this.vote = vote; }
+    protected void clearVote() { this.vote = null; }
     protected void kill() { 
         this.alive = false; 
         wb.sendMessage(main.CHAN,this.nick +" was a "+ this.role);
@@ -44,11 +45,6 @@ public class Players {
     protected int getRoleNumber() { return this.roleNumber; }
     protected Players getVote() { return this.vote; }
     protected int getRoundDeath() { return this.roundDeath; }
-    
-    /**
-     * checks to see if player is alive
-     * @returns boolean
-     */
     protected boolean isAlive() { return this.alive; }
 
 }
