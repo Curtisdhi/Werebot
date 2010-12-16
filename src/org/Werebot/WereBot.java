@@ -32,13 +32,14 @@ public class WereBot  extends PircBot {
     public WereBot(Main main) {
         this.main = main;
         this.setName(main.NICK);
-        Config conf = new Config("config.conf");
+        /*Config conf = new Config("config.conf");
         String SS = conf.getParameter("startseconds");
         if (SS != null) { STARTSECONDS = Integer.parseInt(SS); } 
         SS = conf.getParameter("dayseconds");
         if (SS != null) { DAYSECONDS = Integer.parseInt(SS); } 
         SS = conf.getParameter("minplayers");
         if (SS != null) { MINPLAYERS = Integer.parseInt(SS); } 
+        conf.close();*/
     }
 
     protected  void onConnect() {

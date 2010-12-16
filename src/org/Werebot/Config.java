@@ -37,9 +37,11 @@ public class Config {
      * @return String
      */
 	protected String getParameter(String item) {
-    	try {
-			for (String readLine = inputStream.readLine(); readLine != null; ) {
+    	try {		
+    		String readLine;
+			while ((readLine = inputStream.readLine()) != null) {
 				String[] Token = readLine.split("=");
+				System.out.println(readLine);
 				if (Token[0].equalsIgnoreCase(item)) {
 					return Token[1];
 				}
@@ -54,11 +56,21 @@ public class Config {
 	 * @param item
 	 * @param value
 	 */
-	protected void setItem(String item,String value) {
+	protected void writeItem(String item,String value) {
 		try {
 		writerStream.write(item +" = "+ value);
+		writerStream.newLine();
+		writerStream.flush();
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
 	} 
+	protected void close() {
+		try {
+			inputStream.close();
+			writerStream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
