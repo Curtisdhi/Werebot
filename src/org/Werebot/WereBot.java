@@ -9,7 +9,7 @@ import java.util.Iterator;
  * The Main Engine
  * 
  * @author Pickle
- * @version 0.3
+ * @version 0.4
  */
 
 public class WereBot  extends PircBot {
@@ -21,9 +21,9 @@ public class WereBot  extends PircBot {
     protected Roles role = null;
     protected Votes vote = null;
 
-    protected final int STARTSECONDS = 30;
-    protected final int DAYSECONDS = 30;
-    protected final int MINPLAYERS = 3;
+    protected int STARTSECONDS = 30;
+    protected int DAYSECONDS = 30;
+    protected int MINPLAYERS = 3;
 
     protected User me;
 
@@ -32,6 +32,13 @@ public class WereBot  extends PircBot {
     public WereBot(Main main) {
         this.main = main;
         this.setName(main.NICK);
+        Config conf = new Config("config.conf");
+        String SS = conf.getParameter("startseconds");
+        if (SS != null) { STARTSECONDS = Integer.parseInt(SS); } 
+        SS = conf.getParameter("dayseconds");
+        if (SS != null) { DAYSECONDS = Integer.parseInt(SS); } 
+        SS = conf.getParameter("minplayers");
+        if (SS != null) { MINPLAYERS = Integer.parseInt(SS); } 
     }
 
     protected  void onConnect() {
@@ -72,6 +79,7 @@ public class WereBot  extends PircBot {
                             if (this.GameRunning) { player.kill(); }
                             else { iter.remove(); }
                             sendMessage(main.CHAN,sender +" has Left");
+                            setMode(main.CHAN, "-v "+ player.getNick());
                             break;
                         }
                     }
@@ -162,6 +170,7 @@ public class WereBot  extends PircBot {
             if (this.GameStarted) {
                 sendRole(this.getPlayersObject(sourceNick));
                 this.getPlayersObject(sourceNick).kill(this.round);
+                setMode(main.CHAN, "-v "+ sourceNick);
             }
             else {
                 this.destroyPlayer(this.getPlayersObject(sourceNick));
@@ -179,6 +188,7 @@ public class WereBot  extends PircBot {
             if (this.GameStarted) {
                 sendRole(this.getPlayersObject(sender)); 
                 this.getPlayersObject(sender).kill(this.round);
+                setMode(main.CHAN, "-v "+ sender);
             }
             else {
                 this.destroyPlayer(this.getPlayersObject(sender));
@@ -199,6 +209,7 @@ public class WereBot  extends PircBot {
             if (this.GameStarted) { 
                 sendRole(this.getPlayersObject(recipientNick));
                 this.getPlayersObject(recipientNick).kill(this.round);
+                setMode(main.CHAN, "-v "+ recipientNick);
             }
             else {
                 this.destroyPlayer(this.getPlayersObject(recipientNick));
@@ -217,7 +228,7 @@ public class WereBot  extends PircBot {
                 if (player.getRoundDeath() == this.round) { 
                     player.revive(); 
                     sendMessage(main.CHAN,sender +" has been revived!");
-                    this.sendRole(sender);
+                    this.sendPrivateRole(getPlayersObject(sender));
                     if (me.isOp()) {
                         voice(main.CHAN,sender);  
                     }
@@ -324,7 +335,7 @@ public class WereBot  extends PircBot {
     protected void destroyPlayer(Players p) {
         for (Iterator<Players> iter = this.players.iterator(); iter.hasNext();) {
             Players player = iter.next();
-            if (player == p) {
+            if (player.equals(p)) {
                 iter.remove();
                 break;
             }
@@ -369,7 +380,7 @@ public class WereBot  extends PircBot {
         for (int i = 0; i < pArray.length; i++) {
             if (pArray[i] != null) {
                 sendNotice(pArray[i].getNick(),"Your role has been choosen!");
-                this.sendRole(pArray[i].getNick());
+                this.sendPrivateRole(pArray[i]);
             }
         }
     }
@@ -377,9 +388,8 @@ public class WereBot  extends PircBot {
     /**
      * sends role as a notice  to player
      */
-    protected void sendRole(String player) {
-        Players p = this.getPlayersObject(player);
-        sendNotice(p.getNick(), "Your role is: "+ p.getRole());
+    protected void sendPrivateRole(Players player) {
+        sendNotice(player.getNick(), "Your role is: "+ player.getRole());
     }
 
     /*
@@ -398,11 +408,10 @@ public class WereBot  extends PircBot {
      * @return int
      */
     protected int countAliveWolves() {
-            int wolf = 0;
+        int wolf = 0;
         for (Iterator<Players> iter = this.players.iterator(); iter.hasNext();) {
             Players p = iter.next();
-            if (p.getRoleNumber() == 0 
-            && p.isAlive()) {
+            if (isWolf(p) && p.isAlive()) {
                 wolf++;
             }
         }
@@ -413,29 +422,20 @@ public class WereBot  extends PircBot {
      * @return boolean
      */
     protected boolean isWolf(Players player) {
-        for (Iterator<Players> iter = this.players.iterator(); iter.hasNext();) {
-            Players p = iter.next();
-        	if (p.equals(player) && p.getRoleNumber() == 0) {
-            	return true;
-            }
+        if (player.getRoleNumber() == 0) {
+            return true;
         }
         return false;
     }
     protected boolean isSeer(Players player) {
-        for (Iterator<Players> iter = this.players.iterator(); iter.hasNext();) {
-            Players p = iter.next();
-        	if (p.equals(player) && p.getRoleNumber() == 1) {
-            	return true;
-            }
+        if (player.getRoleNumber() == 1) {
+            return true;
         }
         return false;
     }
     protected boolean isVillager(Players player) {
-        for (Iterator<Players> iter = this.players.iterator(); iter.hasNext();) {
-            Players p = iter.next();
-        	if (p.equals(player) && p.getRoleNumber() == 3) {
-            	return true;
-            }
+        if (player.getRoleNumber() == 3) {
+           	return true;
         }
         return false;
     }
@@ -444,7 +444,7 @@ public class WereBot  extends PircBot {
      * @return int
      */
     protected int countAlive() {
-            int players = 0;
+        int players = 0;
         for (Iterator<Players> iter = this.players.iterator(); iter.hasNext();) {
             Players p = iter.next();
             if (p.isAlive()) {
@@ -490,6 +490,8 @@ public class WereBot  extends PircBot {
         //End of day
         if (Day) {
             Day = false; 
+            givePlayersMode("-v");
+            setMode(main.CHAN,"+m");
             sendMessage(main.CHAN, "As the Sunsets...the votes is counted....");
             Players p = vote.countVotes(players);
             clearVotes();
@@ -504,26 +506,28 @@ public class WereBot  extends PircBot {
         //End of night
         else { 
             Day = true; 
+            givePlayersMode("+v");
+            setMode(main.CHAN,"-m");
             sendMessage(main.CHAN, "As the sun rises....the villagers expects the worst...");
             for (Iterator<Players> iter = this.players.iterator(); iter.hasNext();) {
             	Players p = iter.next();
-            	/*
-            	 * FIXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-            	 */
-            	if (p.isAlive() && p.getRoleNumber() == 0 && p.getVote() != null) { 
-            		sendNotice(p.getNick(), "You has killed "+ p.getVote().getNick() +".");    
-            		 
-            	}
             	if (p.isAlive() && p.getRoleNumber() == 1 && p.getVote() != null) { 
             		sendNotice(p.getNick(), "You has gather enough info about "+ p.getVote().getNick() +".");      	
             		sendNotice(p.getNick(), p.getVote().getNick()+" is a "+ p.getVote().getRole());
-            	}
-            	
-            	
+            		p.clearVote();
+            		break;
+            	}           	      	
             }
+            Players p = vote.countVotes(players);
+            clearVotes();
+        	if (p.isAlive() && p != null) { 
+        		sendMessage(main.CHAN, p.getNick() +" was mauled by a wolf!! :O");    
+        		p.kill();
+        	}
             sendMessage(main.CHAN, "There is "+ countAliveWolves() +" wolves still alive..");
             sendMessage(main.CHAN, "You has "+ DAYSECONDS +" seconds to vote.");
         }
+        round++;
     }
 
 

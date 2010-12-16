@@ -1,7 +1,10 @@
 package org.Werebot;
 
 import java.util.Random;
+
 /**
+ * handles the roles
+ * 
  * @author Pickle
  * @version 0.2
  */
