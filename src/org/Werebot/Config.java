@@ -22,14 +22,6 @@ public class Config {
     
     public Config(String CONFIG) {
     	if (CONFIG != null) { this.CONFIG = CONFIG; } 
-    	try {
-			inputStream = new BufferedReader(new FileReader(this.CONFIG));
-			writerStream = new BufferedWriter(new FileWriter(this.CONFIG));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
     }
     /**
      * gets the parameter in said item
@@ -38,14 +30,42 @@ public class Config {
      */
 	protected String getParameter(String item) {
     	try {		
+    		inputStream = new BufferedReader(new FileReader(this.CONFIG));
     		String readLine;
 			while ((readLine = inputStream.readLine()) != null) {
 				String[] Token = readLine.split("=");
-				System.out.println(readLine);
 				if (Token[0].equalsIgnoreCase(item)) {
+					inputStream.close();
 					return Token[1];
 				}
 			}
+			inputStream.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+    /**
+     * gets the parameter in said item
+     * @param item
+     * @return String[]
+     */
+	protected String[] getParameterArray(String item) {
+    	try {	
+    		inputStream = new BufferedReader(new FileReader(this.CONFIG));
+    		String readLine;
+			while ((readLine = inputStream.readLine()) != null) {
+				String[] Token = readLine.split("=");
+				if (Token[0].equalsIgnoreCase(item)) {
+					inputStream.close();
+					return Token[1].split(",");
+				}
+			}
+			inputStream.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -58,19 +78,21 @@ public class Config {
 	 */
 	protected void writeItem(String item,String value) {
 		try {
-		writerStream.write(item +" = "+ value);
-		writerStream.newLine();
-		writerStream.flush();
+			writerStream = new BufferedWriter(new FileWriter(this.CONFIG));
+			writerStream.write(item +" = "+ value);
+			writerStream.newLine();
+			writerStream.flush();
+		}  catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}catch(IOException e) {
+			e.printStackTrace();
+		} 
+		try {
+		writerStream.close();
 		} catch(IOException e) {
 			e.printStackTrace();
-		}
+		} 
 	} 
-	protected void close() {
-		try {
-			inputStream.close();
-			writerStream.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+	//end file
 }
+

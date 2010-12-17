@@ -16,7 +16,7 @@ public class Main {
     
     public static void main(String[] args) throws Exception {
         Main main = new Main();
-       /* Config conf = new Config("config.conf");
+        Config conf = new Config("config.conf");
         String SS = conf.getParameter("server");
         if (SS != null) { main.SERVER = SS; } 
         SS = conf.getParameter("port");
@@ -27,7 +27,6 @@ public class Main {
         if (SS != null) { main.CHAN = SS; } 
         SS = conf.getParameter("identify_pass");
         if (SS != null) { main.IDENTIFY_PASS = SS; } 
-        conf.close();*/
         
         WereBot bot = new WereBot(main);
         //Enable debugging output.
