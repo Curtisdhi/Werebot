@@ -17,15 +17,15 @@ public class Main {
     public static void main(String[] args) throws Exception {
         Main main = new Main();
         Config conf = new Config("config.conf");
-        String SS = conf.getParameter("server");
+        String SS = conf.getString("server");
         if (SS != null) { main.SERVER = SS; } 
-        SS = conf.getParameter("port");
+        SS = conf.getString("port");
         if (SS != null) { main.PORT = Integer.parseInt(SS); } 
-        SS = conf.getParameter("nick");
+        SS = conf.getString("nick");
         if (SS != null) { main.NICK = SS; } 
-        SS = conf.getParameter("chan");
+        SS = conf.getString("chan");
         if (SS != null) { main.CHAN = SS; } 
-        SS = conf.getParameter("identify_pass");
+        SS = conf.getString("identify_pass");
         if (SS != null) { main.IDENTIFY_PASS = SS; } 
         
         WereBot bot = new WereBot(main);

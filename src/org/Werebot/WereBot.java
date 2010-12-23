@@ -33,12 +33,12 @@ public class WereBot extends PircBot {
         this.main = main;
         setName(main.NICK);
         Config conf = new Config("config.conf");
-        String SS = conf.getParameter("startseconds");
-        if (SS != null) { STARTSECONDS = Integer.parseInt(SS); } 
-        SS = conf.getParameter("dayseconds");
-        if (SS != null) { DAYSECONDS = Integer.parseInt(SS); } 
-        SS = conf.getParameter("minplayers");
-        if (SS != null) { MINPLAYERS = Integer.parseInt(SS); } 
+        int SS = conf.getInt("startseconds");
+        if (SS != 0) { STARTSECONDS = SS; } 
+        SS = conf.getInt("dayseconds");
+        if (SS != 0) { DAYSECONDS = SS; } 
+        SS = conf.getInt("minplayers");
+        if (SS != 0) { MINPLAYERS = SS; } 
     }
 
     protected  void onConnect() {
@@ -105,15 +105,18 @@ public class WereBot extends PircBot {
                     else if (Token[1].equals("0")) { sendMessage(main.CHAN, sender +" votes noone"); }
                 }   
             }
+            else if (Token[0].equalsIgnoreCase("!list") && GameStarted) {
+                sendMessage(main.CHAN,"All Players: "+ getPlayerList());
+            } 
             else if (Token[0].equalsIgnoreCase("!alive") && GameRunning) {
                 sendMessage(main.CHAN,"Alive Players: "+ getPlayerList(true));
             }   
             else if (Token[0].equalsIgnoreCase("!dead") && GameRunning) {
                 sendMessage(main.CHAN,"Dead Players: "+ getPlayerList(false));
             } 
-            else if (Token[0].equalsIgnoreCase("!list") && GameStarted) {
-                sendMessage(main.CHAN,"All Players: "+ getPlayerList());
-            }             
+            else if (Token[0].equalsIgnoreCase("!role") && GameRunning) {
+            	sendPrivateRole(getPlayersObject(sender));
+            }
         }
     }
 
@@ -145,13 +148,10 @@ public class WereBot extends PircBot {
     protected void onNickChange(String oldNick, String login,
     String hostname, String newNick) {
         if (GameStarted && newNick != getNick()) {
-            for (Iterator<Players> iter = players.iterator(); iter.hasNext();) {
-                Players  player = iter.next();
+                Players  player = getPlayersObject(oldNick);
                 if (oldNick.equalsIgnoreCase(player.getNick())) {
                     player.setNick(newNick);
-                    break;
                 }
-            }
         }
         else if (newNick == getNick()) {
             me = getIRCUser(main.CHAN, getNick());
@@ -169,12 +169,11 @@ public class WereBot extends PircBot {
         }
         else if (GameStarted && isPlayerInGame(getPlayersObject(sourceNick))) {
             sendMessage(main.CHAN,sourceNick +" has fled, but the wolf caught him and was killed");
-            if (GameStarted) {
+            if (GameRunning) {
                 sendRole(getPlayersObject(sourceNick));
-                getPlayersObject(sourceNick).kill(round);
-                setMode(main.CHAN, "-v "+ sourceNick);
+                getPlayersObject(sourceNick).kill();
             }
-            else {
+            else if (GameStarted) { 
                 destroyPlayer(getPlayersObject(sourceNick));
             }
             enoughPlayers();
@@ -187,12 +186,10 @@ public class WereBot extends PircBot {
         }
         else if (GameStarted && isPlayerInGame(getPlayersObject(sender))) {
             sendMessage(main.CHAN,sender +" has fled, but the wolf caught him and was killed");
-            if (GameStarted) {
-                sendRole(getPlayersObject(sender)); 
-                getPlayersObject(sender).kill(round);
-                setMode(main.CHAN, "-v "+ sender);
+            if (GameRunning) {
+                getPlayersObject(sender).kill(round);   
             }
-            else {
+            else if (GameStarted) {
                 destroyPlayer(getPlayersObject(sender));
             }             
             enoughPlayers();
@@ -208,12 +205,10 @@ public class WereBot extends PircBot {
         }
         else if (isPlayerInGame(getPlayersObject(recipientNick))) {
             sendMessage(main.CHAN,recipientNick +" has fled, but the wolf caught him and was killed");
-            if (GameStarted) { 
-                sendRole(getPlayersObject(recipientNick));
+            if (GameRunning) { 
                 getPlayersObject(recipientNick).kill(round);
-                setMode(main.CHAN, "-v "+ recipientNick);
             }
-            else {
+            else if (GameStarted) {
                 destroyPlayer(getPlayersObject(recipientNick));
             }
             enoughPlayers();      
@@ -407,6 +402,7 @@ public class WereBot extends PircBot {
             iter.next().clearVote();
         }
 	}
+    
     /**
      * this counts the wolves
      * @return int
@@ -421,6 +417,22 @@ public class WereBot extends PircBot {
         }
         return wolf;
     }
+    
+    /**
+     * counts the villagers
+     * @return int
+     */
+    protected int countAliveVillagers() {
+        int vill = 0;
+        for (Iterator<Players> iter = players.iterator(); iter.hasNext();) {
+            Players p = iter.next();
+            if (isVillager(p) && p.isAlive()) {
+                vill++;
+            }
+        }
+        return vill;
+    }
+    
     /**
      * gets the wolflist
      * @return Players[]
@@ -435,6 +447,7 @@ public class WereBot extends PircBot {
     	}
         return (Players[]) wolfTemp.toArray();
     }
+    
     /**
      * checks is player is wolf
      * @return boolean
@@ -445,6 +458,7 @@ public class WereBot extends PircBot {
         }
         return false;
     }
+    
     /**
      * checks is player is seer
      * @return boolean
@@ -455,6 +469,7 @@ public class WereBot extends PircBot {
         }
         return false;
     }
+    
     /**
      * checks is player is villager
      * @return boolean
@@ -465,6 +480,7 @@ public class WereBot extends PircBot {
         }
         return false;
     }
+    
     /**
      * this counts the players
      * @return int
@@ -479,6 +495,7 @@ public class WereBot extends PircBot {
         }
         return player;
     }
+    
     /**
      * initiate a new game
      */
@@ -486,12 +503,13 @@ public class WereBot extends PircBot {
         GameStarted = true;
         wbtimer.start();
 	}
+    
     /**
      * this is called by the timer and starts the game 
      * @return boolean
      */
     protected void gameTimedStart() {
-        if (players.size() >= MINPLAYERS) { 
+        if (countAlive() >= MINPLAYERS) { 
             sendMessage(main.CHAN,"The game has started!");
             sendMessage(main.CHAN, "There is "+ countAliveWolves() +" wolves still alive..");
             sendMessage(main.CHAN, "You has "+ DAYSECONDS +" seconds to vote.");
@@ -518,7 +536,6 @@ public class WereBot extends PircBot {
         if (Day) {
             Day = false; 
             givePlayersMode("-v");
-            setMode(main.CHAN,"+m");
             sendMessage(main.CHAN, "As the Sunsets...the votes is counted....");
             Players p = vote.countVotes(players);
             clearVotes();
@@ -534,7 +551,6 @@ public class WereBot extends PircBot {
         else { 
             Day = true; 
             givePlayersMode("+v");
-            setMode(main.CHAN,"-m");
             sendMessage(main.CHAN, "As the sun rises....the villagers expects the worst...");
             for (Iterator<Players> iter = players.iterator(); iter.hasNext();) {
             	Players p = iter.next();
@@ -557,12 +573,11 @@ public class WereBot extends PircBot {
         round++;
     }
 
-
 	/**
      * checks to see if enoughPlayers...if not end game
      */
     protected void enoughPlayers() {
-        if (players.size() <= 1 
+        if (countAlive() <= 1 
         || (countAlive() - countAliveWolves()) <= 1
         || countAliveWolves() < 1
         ) { 
@@ -628,6 +643,7 @@ public class WereBot extends PircBot {
                     seconds = 0;   
                 }
             }
+            System.out.println(seconds +" SECOND :D");
         }
 
         public void second()  {

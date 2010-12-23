@@ -1,2 +1,2 @@
-java -jar Werebot.jar
+java -jar bin\Werebot.jar
 pause

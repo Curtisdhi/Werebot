@@ -36,11 +36,11 @@ public class Roles {
 	    //this reads and sets the roles from the config...(if they exist if not use the default)
 	    Config conf = new Config("config.conf");
 	    String[][] SS = new String[roles][];
-	    SS[0] = conf.getParameterArray("role_wolf");
+	    SS[0] = conf.getStringArray("role_wolf");
 	    if (SS[0] == null) { SS[0] = Roles[0]; }
-	    SS[1] = conf.getParameterArray("role_seer");
+	    SS[1] = conf.getStringArray("role_seer");
 	    if (SS[1] == null) { SS[1] = Roles[1]; }
-	    SS[2] = conf.getParameterArray("role_villager");
+	    SS[2] = conf.getStringArray("role_villager");
 	    if (SS[2] == null) { SS[2] = Roles[2]; }
 	    
 	    for (int i=0; i < roles; i++) {

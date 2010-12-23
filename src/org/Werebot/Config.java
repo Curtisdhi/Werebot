@@ -28,7 +28,7 @@ public class Config {
      * @param item
      * @return String
      */
-	protected String getParameter(String item) {
+	protected String getString(String item) {
     	try {		
     		inputStream = new BufferedReader(new FileReader(this.CONFIG));
     		String readLine;
@@ -47,12 +47,26 @@ public class Config {
 		}
 		return null;
 	}
+	/**
+	 * gets the parameter int
+	 * @returns int
+	 */
+	public int getInt(String item) { 
+		int temp;
+		if (item.matches("[-+]?\\d+(\\.\\d+)?")) {
+		    temp = Integer.parseInt(item);   
+		    return temp;   
+		}   
+		else {  
+		    return 0;   
+		}   
+	}
     /**
      * gets the parameter in said item
      * @param item
      * @return String[]
      */
-	protected String[] getParameterArray(String item) {
+	protected String[] getStringArray(String item) {
     	try {	
     		inputStream = new BufferedReader(new FileReader(this.CONFIG));
     		String readLine;
